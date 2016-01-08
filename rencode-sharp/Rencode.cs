@@ -350,7 +350,7 @@ namespace rencodesharp
 			startIndex += 1;
 			endIndex = startIndex + 1;
 
-			return BStruct.ToInt1(Util.StringBytes(x.Substring(startIndex, 1)), 0);
+			return BStruct.ToByte(Util.StringBytes(x.Substring(startIndex, 1)), 0);
 		}
 
 		private static object DecodeInt2(string x, int startIndex, out int endIndex)
@@ -358,7 +358,7 @@ namespace rencodesharp
 			startIndex += 1;
 			endIndex = startIndex + 2;
 
-			return BStruct.ToInt2(Util.StringBytes(x.Substring(startIndex, 2)), 0);
+			return BStruct.ToInt16(Util.StringBytes(x.Substring(startIndex, 2)), 0);
 		}
 
 		private static object DecodeInt4(string x, int startIndex, out int endIndex)
@@ -366,7 +366,7 @@ namespace rencodesharp
 			startIndex += 1;
 			endIndex = startIndex + 4;
 
-            return BStruct.ToInt4(Util.StringBytes(x.Substring(startIndex, 4)), 0);
+            return BStruct.ToInt32(Util.StringBytes(x.Substring(startIndex, 4)), 0);
 		}
 
 		private static object DecodeInt8(string x, int startIndex, out int endIndex)
@@ -374,7 +374,7 @@ namespace rencodesharp
 			startIndex += 1;
 			endIndex = startIndex + 8;
 
-			return BStruct.ToInt8(Util.StringBytes(x.Substring(startIndex, 8)), 0);
+			return BStruct.ToInt64(Util.StringBytes(x.Substring(startIndex, 8)), 0);
 		}
 
 		private static object DecodeFloat(string x, int startIndex, out int endIndex)

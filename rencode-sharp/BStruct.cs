@@ -1,24 +1,21 @@
 using System;
+using System.Linq;
 using MiscUtil.Conversion;
 
 namespace rencodesharp
 {
-	public class BStruct
+	public static class BStruct
 	{
 		/// <summary>
 		/// Pack the object 'x' into (network order byte format).
 		/// </summary>
 		public static string Pack(object x, int n)
 		{
-			byte[] b = EndianBitConverter.Big.GetBytes(x);
+			byte[] bytes = EndianBitConverter.Big.GetBytes(x);
 
-			string output = "";
-			for(int i = 0; i < b.Length; i++)
-			{
-				output += (char)b[i];
-			}
+			string output = string.Concat(bytes.Select(Convert.ToChar));
 
-			return output.Substring(output.Length - n, n);
+		    return output.Substring(output.Length - n, n);
 		}
 
 		/// <summary>
@@ -28,122 +25,83 @@ namespace rencodesharp
 		{
 			x = Util.StringPad(x, n);
 
-			byte[] b = new byte[n];
-			for(int i = 0; i < x.Length; i++)
-			{
-				b[i] = (byte)x[i];
-			}
+		    byte[] bytes = x.Select(Convert.ToByte).ToArray();
 
-			if(b.Length == 1) return BStruct.ToInt1(b, 0);
-			if(b.Length == 2) return BStruct.ToInt2(b, 0);
-			if(b.Length == 4) return BStruct.ToInt4(b, 0);
-			if(b.Length == 8) return BStruct.ToInt8(b, 0);
+		    switch (bytes.Length)
+		    {
+                case 1: return ToByte(bytes, 0);
+                case 2: return ToInt16(bytes, 0);
+                case 4: return ToInt32(bytes, 0);
+                case 8: return ToInt64(bytes, 0);
+            }
+
 			return null;
 		}
 
 		/// <summary>
-		/// Gets the bytes of an Int32.
-		/// </summary>
-		public unsafe static void GetBytes(Int32 value, byte[] buffer, int startIndex)
-		{
-			fixed(byte* numRef = buffer)
-			{
-				*((int*)(numRef+startIndex)) = value;
-			}
-		}
-
-		/// <summary>
-		/// Gets the bytes of an Int64.
-		/// </summary>
-		public unsafe static void GetBytes(Int64 value, byte[] buffer, int startingIndex)
-        {
-            fixed(byte* numRef = buffer)
-            {
-                *((long*)(numRef + startingIndex)) = value;
-            }
-        }
-
-		/// <summary>
 		/// Converts byte array to INT1 (8 bit integer)
 		/// </summary>
-		public static int ToInt1(byte[] value, int startIndex)
-		{
-			if(value.Length == 4)
-				return EndianBitConverter.Big.ToInt16(value, startIndex);
-			else
-			{
-				byte[] newValue;
-
-				if(value[0] >= 0 && value[0] < 128)
-					newValue = new byte[2] { 0, 0 };
-				else
-					newValue = new byte[2] { 255, 255 };
-
-				int ni = newValue.Length - 1;
-				for(int i = value.Length - 1; i >= 0; i--)
-				{
-					newValue[ni] = value[i];
-					ni--;
-				}
-
-				return EndianBitConverter.Big.ToInt16(newValue, startIndex);
-			}
-		}
+		public static byte ToByte(byte[] value, int startIndex)
+        {
+            if (value.Length != 1)
+                throw new ArgumentException("\"value\" doesn't have 1 byte.");
+		    return value[0];
+        }
 
 		/// <summary>
 		/// Converts byte array to INT2 (16 bit integer)
 		/// </summary>
-		public static int ToInt2(byte[] value, int startIndex)
+		public static short ToInt16(byte[] value, int startIndex)
 		{
-			if(value.Length == 2)
-				return EndianBitConverter.Big.ToInt16(value, startIndex);
-			else
-				throw new ArgumentException("\"value\" doesn't have 2 bytes.");
+		    if (value.Length != 2)
+		        throw new ArgumentException("\"value\" doesn't have 2 bytes.");
+
+		    return EndianBitConverter.Big.ToInt16(value, startIndex);
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Converts byte array to INT4 (32 bit integer)
 		/// </summary>
-		public static int ToInt4(byte[] value, int startIndex)
-		{
-			if(value.Length == 4)
-				return EndianBitConverter.Big.ToInt32(value, startIndex);
-			else
-				throw new ArgumentException("\"value\" doesn't have 4 bytes.");
-		}
+		public static int ToInt32(byte[] value, int startIndex)
+	    {
+	        if (value.Length != 4)
+	            throw new ArgumentException("\"value\" doesn't have 4 bytes.");
 
-		/// <summary>
+            return EndianBitConverter.Big.ToInt32(value, startIndex);
+	    }
+
+	    /// <summary>
 		/// Converts byte array to INT8 (64 bit integer)
 		/// </summary>
-		public static long ToInt8(byte[] value, int startIndex)
-		{
-			if(value.Length == 8)
-				return EndianBitConverter.Big.ToInt64(value, startIndex);
-			else
-				throw new ArgumentException("\"value\" doesn't have 8 bytes.");
-		}
+		public static long ToInt64(byte[] value, int startIndex)
+	    {
+	        if (value.Length != 8)
+	            throw new ArgumentException("\"value\" doesn't have 8 bytes.");
 
-		/// <summary>
+            return EndianBitConverter.Big.ToInt64(value, startIndex);
+	    }
+
+	    /// <summary>
 		/// Converts byte array to Float (32 bit float)
 		/// </summary>
 		public static float ToFloat(byte[] value, int startIndex)
-		{
-			if(value.Length == 4)
-				return EndianBitConverter.Big.ToSingle(value, startIndex);
-			else
-				throw new ArgumentException("\"value\" doesn't have 4 bytes.");
-		}
+	    {
+	        if (value.Length != 4)
+	            throw new ArgumentException("\"value\" doesn't have 4 bytes.");
 
-		/// <summary>
+            return EndianBitConverter.Big.ToSingle(value, startIndex);
+	    }
+
+	    /// <summary>
 		/// Converts byte array to Double (64 bit float)
 		/// </summary>
 		public static double ToDouble(byte[] value, int startIndex)
-		{
-			if(value.Length == 8)
-				return EndianBitConverter.Big.ToDouble(value, startIndex);
-			else
-				throw new ArgumentException("\"value\" doesn't have 8 bytes.");
-		}
+	    {
+	        if (value.Length != 8)
+	            throw new ArgumentException("\"value\" doesn't have 8 bytes.");
+
+	        return EndianBitConverter.Big.ToDouble(value, startIndex);
+	    }
 	}
 }
 

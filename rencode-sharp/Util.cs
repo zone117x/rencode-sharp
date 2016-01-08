@@ -26,12 +26,8 @@ namespace rencodesharp
 		/// </summary>
 		public static string StringPad(string x, int n)
 		{
-			for(int i = x.Length; i < n; i++)
-			{
-				x = "\x00" + x;
-			}
-			return x;
-		}
+		    return x.PadLeft(n, '\x00');
+        }
 	}
 }
 
