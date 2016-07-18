@@ -124,7 +124,7 @@ namespace MiscUtil.Conversion
 		/// <returns>A character formed by two bytes beginning at startIndex.</returns>
 		public char ToChar (byte[] value, int startIndex)
         {
-            byte[] bytes = GetCorrectedBytes(value, startIndex, 8);
+            byte[] bytes = GetCorrectedBytes(value, startIndex, 2);
             return BitConverter.ToChar(bytes, 0);
         }
 
@@ -162,7 +162,7 @@ namespace MiscUtil.Conversion
 		/// <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
 		public short ToInt16 (byte[] value, int startIndex)
         {
-            byte[] bytes = GetCorrectedBytes(value, startIndex, 8);
+            byte[] bytes = GetCorrectedBytes(value, startIndex, 2);
             return BitConverter.ToInt16(bytes, 0);
         }
 
@@ -174,7 +174,7 @@ namespace MiscUtil.Conversion
 		/// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
 		public int ToInt32 (byte[] value, int startIndex)
         {
-            byte[] bytes = GetCorrectedBytes(value, startIndex, 8);
+            byte[] bytes = GetCorrectedBytes(value, startIndex, 4);
             return BitConverter.ToInt32(bytes, 0);
         }
 
