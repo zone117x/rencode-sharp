@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace rencodesharp
@@ -18,7 +20,7 @@ namespace rencodesharp
 		/// </summary>
 		public static byte[] StringBytes(string s)
 		{
-		    return Encoding.UTF8.GetBytes(s);
+		    return s.Select(Convert.ToByte).ToArray();
 		}
 
 		/// <summary>
