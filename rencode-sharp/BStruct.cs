@@ -13,7 +13,7 @@ namespace rencodesharp
 		{
 			byte[] bytes = EndianBitConverter.Big.GetBytes(x);
 
-			string output = string.Concat(bytes.Select(Convert.ToChar));
+			string output = string.Concat(bytes.Select(Convert.ToChar).Cast<object>().ToArray());
 
 		    return output.Substring(output.Length - n, n);
 		}
