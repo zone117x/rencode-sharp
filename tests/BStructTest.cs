@@ -1,41 +1,41 @@
-using NUnit.Framework;
 using System;
 using rencodesharp;
 using MiscUtil.Conversion;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace rencodesharp_tests
 {
-	[TestFixture()]
+	[TestClass]
 	public class BStructTest
 	{
-		[Test()]
+		[TestMethod]
 		public void Int1()
 		{
 			int a;
 
-			a = BStruct.ToInt1(new byte[] { 50 }, 0);
+			a = BStruct.ToByte(new byte[] { 50 }, 0);
 			Assert.AreEqual(50, a);
 
-			a = BStruct.ToInt1(new byte[] { 206 }, 0);
+			a = BStruct.ToByte(new byte[] { 206 }, 0);
 			Assert.AreEqual(-50, a);
 		}
 
-		[Test()]
+		[TestMethod]
 		public void Int2()
 		{
 			int a;
 
-			a = BStruct.ToInt2(new byte[] { 6, 4 }, 0);
+			a = BStruct.ToInt16(new byte[] { 6, 4 }, 0);
 			Assert.AreEqual(1540, a);
 
-			a = BStruct.ToInt2(new byte[] { 1, 44 }, 0);
+			a = BStruct.ToInt16(new byte[] { 1, 44 }, 0);
 			Assert.AreEqual(300, a);
 
-			a = BStruct.ToInt2(new byte[] { 254, 212 }, 0);
+			a = BStruct.ToInt16(new byte[] { 254, 212 }, 0);
 			Assert.AreEqual(-300, a);
 		}
 
-		[Test()]
+		[TestMethod]
 		public void Int4()
 		{
 			string se = BStruct.Pack(1009025546, 4);
@@ -47,22 +47,22 @@ namespace rencodesharp_tests
 
 			int a;
 
-			a = BStruct.ToInt4(new byte[] { 0, 0, 195, 80 }, 0);
+			a = BStruct.ToInt32(new byte[] { 0, 0, 195, 80 }, 0);
 			Assert.AreEqual(50000, a);
 
-			a = BStruct.ToInt4(new byte[] { 255, 255, 60, 176 }, 0);
+			a = BStruct.ToInt32(new byte[] { 255, 255, 60, 176 }, 0);
 			Assert.AreEqual(-50000, a);
 		}
 
-		[Test()]
+		[TestMethod]
 		public void Int8()
 		{
 			long a;
 
-			a = BStruct.ToInt8(new byte[] { 0, 0, 0, 4, 168, 23, 200, 0 }, 0);
+			a = BStruct.ToInt64(new byte[] { 0, 0, 0, 4, 168, 23, 200, 0 }, 0);
 			Assert.AreEqual(20000000000, a);
 
-			a = BStruct.ToInt8(new byte[] { 255, 255, 255, 251, 87, 232, 56, 0 }, 0);
+			a = BStruct.ToInt64(new byte[] { 255, 255, 255, 251, 87, 232, 56, 0 }, 0);
 			Assert.AreEqual(-20000000000, a);
 		}
 	}

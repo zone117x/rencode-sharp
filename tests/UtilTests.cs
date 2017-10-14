@@ -1,13 +1,13 @@
-using NUnit.Framework;
 using System;
 using rencodesharp;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace rencodesharp_tests
 {
-	[TestFixture()]
+	[TestClass]
 	public class UtilTests
 	{
-		[Test()]
+		[TestMethod]
 		public void StringBytes()
 		{
 			Assert.AreEqual(16, (int)Util.StringBytes("\x10")[0]);

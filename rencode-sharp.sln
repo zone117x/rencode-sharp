@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2002
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rencode-sharp", "rencode-sharp\rencode-sharp.csproj", "{3148E68E-071C-4C2D-93E7-90EE84DF58CC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rencode-sharp_tests", "tests\rencode-sharp_tests.csproj", "{5EB05333-95BF-47A9-976E-01C41536C01E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3148E68E-071C-4C2D-93E7-90EE84DF58CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3148E68E-071C-4C2D-93E7-90EE84DF58CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3148E68E-071C-4C2D-93E7-90EE84DF58CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3148E68E-071C-4C2D-93E7-90EE84DF58CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EB05333-95BF-47A9-976E-01C41536C01E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EB05333-95BF-47A9-976E-01C41536C01E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EB05333-95BF-47A9-976E-01C41536C01E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EB05333-95BF-47A9-976E-01C41536C01E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9614F72A-511D-4171-AA1F-749123DB057C}
+	EndGlobalSection
+EndGlobal

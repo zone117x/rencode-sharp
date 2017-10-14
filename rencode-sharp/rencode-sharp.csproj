@@ -1,37 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{07A4623C-C9CD-474C-8793-1817E81E83D4}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>rencodesharp</RootNamespace>
-    <AssemblyName>rencode-sharp</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworks>netstandard1.3;net4.5</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Version>0.1.0</Version>
+    <Authors>Dean Gardiner, Ryan Esteves, Petru Paler, Connelly Barnes, Matthew Little, et al.</Authors>
+    <Description>Port of the Python module for fast (basic) object serialization similar to bencode</Description>
+    <PackageLicenseUrl>https://github.com/zone117x/rencode-sharp/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/zone117x/rencode-sharp/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/zone117x/rencode-sharp/</RepositoryUrl>
+    <PackageTags>rencode bencode</PackageTags>
+    <Company />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <OutputPath>bin\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <OutputPath>bin\Release\</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <Compile Include="Rencode.cs" />
-    <Compile Include="Util.cs" />
-    <Compile Include="BStruct.cs" />
-    <Compile Include="RencodeConst.cs" />
-    <Compile Include="Conversion\EndianBitConverter.cs" />
-    <Compile Include="Conversion\Endianness.cs" />
-  </ItemGroup>
-  <ItemGroup />
+
 </Project>

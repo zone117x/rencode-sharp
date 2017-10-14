@@ -11,8 +11,10 @@ namespace rencodesharp
 		private delegate object DecodeDelegate(string x, int startIndex, out int endIndex);
 
 		private static readonly Dictionary<Type, EncodeDelegate> EncodeFunc = new Dictionary<Type, EncodeDelegate>(){
-			{typeof(string),						EncodeString},
+            {typeof(string),                        EncodeString},
 
+            {typeof(sbyte),                         EncodeInt},
+            {typeof(short),                         EncodeInt},
 			{typeof(int),							EncodeInt},
 			{typeof(long),							EncodeInt},
 			{typeof(float),							EncodeFloat},
@@ -342,7 +344,23 @@ namespace rencodesharp
 			}
 
 			endIndex = newf+1;
-			return n;
+
+            object result = n;
+
+            if (n <= sbyte.MaxValue && n >= sbyte.MinValue)
+            {
+                result = (sbyte)n;
+            }
+            else if (n <= short.MaxValue && n >= short.MinValue)
+            {
+                result = (short)n;
+            }
+            else if (n <= int.MaxValue && n >= int.MaxValue)
+            {
+                result = (int)n;
+            }
+
+			return result;
 		}
 
 		private static object DecodeInt1(string x, int startIndex, out int endIndex)

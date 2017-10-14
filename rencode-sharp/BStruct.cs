@@ -41,11 +41,11 @@ namespace rencodesharp
 		/// <summary>
 		/// Converts byte array to INT1 (8 bit integer)
 		/// </summary>
-		public static byte ToByte(byte[] value, int startIndex)
+		public static sbyte ToByte(byte[] value, int startIndex)
         {
             if (value.Length != 1)
                 throw new ArgumentException("\"value\" doesn't have 1 byte.");
-		    return value[0];
+		    return (sbyte)value[0];
         }
 
 		/// <summary>

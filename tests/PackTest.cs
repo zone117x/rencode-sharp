@@ -1,15 +1,15 @@
-using NUnit.Framework;
 using System;
 using System.Text;
 using rencodesharp;
 using MiscUtil.Conversion;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace rencodesharp_tests
 {
-	[TestFixture()]
+	[TestClass]
 	public class PackTest
 	{
-		[Test()]
+		[TestMethod]
 		public void BasicPack()
 		{
 			Assert.AreEqual(120, (int)BStruct.Pack(120, 1)[0]);
@@ -23,21 +23,21 @@ namespace rencodesharp_tests
 			Assert.AreEqual("\xff\xfey`", BStruct.Pack(-100000, 4));
 		}
 
-		[Test()]
+		[TestMethod]
 		public void BasicUnpack()
 		{
 			//Assert.AreEqual(246, BStruct.ToBytes(-10)[0]);
 
-			Assert.AreEqual(120, BStruct.Unpack(BStruct.Pack(120, 1), 1));
+			Assert.AreEqual((sbyte)120, BStruct.Unpack(BStruct.Pack(120, 1), 1));
 
 			string a = BStruct.Pack(-50, 1);
 			Assert.AreEqual(206, (int)a[0]);
-			Assert.AreEqual(-50, BStruct.Unpack(a, 1));
+			Assert.AreEqual((sbyte)-50, BStruct.Unpack(a, 1));
 
-			Assert.AreEqual(32000, BStruct.Unpack(BStruct.Pack(32000, 2), 2));
+			Assert.AreEqual((short)32000, BStruct.Unpack(BStruct.Pack(32000, 2), 2));
 		}
 
-		[Test()]
+		[TestMethod]
 		public void Pad()
 		{
 			Assert.AreEqual("\x00" + "Hello", Util.StringPad("Hello", 6));
