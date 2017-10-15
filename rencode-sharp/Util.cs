@@ -12,7 +12,7 @@ namespace rencodesharp
 		/// </summary>
 		public static string Join(List<object> r)
 		{
-		    return string.Concat(r.ToArray());
+            return string.Concat(r);
 		}
 
 		/// <summary>
@@ -20,7 +20,12 @@ namespace rencodesharp
 		/// </summary>
 		public static byte[] StringBytes(string s)
 		{
-		    return s.Select(Convert.ToByte).ToArray();
+            var arr = new byte[s.Length];
+            for (var i = 0; i < s.Length; i++)
+            {
+                arr[i] = (byte)s[i];
+            }
+            return arr;
 		}
 
 		/// <summary>

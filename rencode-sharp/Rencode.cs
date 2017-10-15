@@ -174,6 +174,14 @@ namespace rencodesharp
 			return Decode(Encoding.GetString(x));
 		}
 
+        /// <summary>
+        /// Decode rencode bytes 'x' into object.
+        /// </summary>
+        public static object Decode(byte[] x, int index, int count)
+        {
+            return Decode(Encoding.GetString(x, index, count));
+        }
+
 		#endregion
 
 		#region Encode
