@@ -22,7 +22,23 @@ namespace rencodesharp_tests
 			Assert.AreEqual("abcdefghij", Rencode.Decode("10:abcdefghij"));
 		}
 
-		[TestMethod]
+        [TestMethod]
+        public void StringUnicode()
+        {
+            Assert.AreEqual("fööbar", Rencode.Decode(Rencode.Encode("fööbar")));
+        }
+
+        [TestMethod]
+        public void StringLarge()
+        {
+            var largeStr = new string(Enumerable.Repeat('f', 9000).ToArray());
+            var encoded = Rencode.Encode(largeStr);
+            var decoded = Rencode.Decode(encoded);
+
+            Assert.AreEqual(largeStr, decoded);
+        }
+
+        [TestMethod]
 		public void Integer()
 		{
 			// ENCODE INT1

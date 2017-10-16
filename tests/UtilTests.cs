@@ -10,9 +10,9 @@ namespace rencodesharp_tests
 		[TestMethod]
 		public void StringBytes()
 		{
-			Assert.AreEqual(16, (int)Util.StringBytes("\x10")[0]);
-			Assert.AreEqual(127, (int)Util.StringBytes("\x7F")[0]);
-			Assert.AreEqual(100, (int)Util.StringBytes("\x64")[0]);
+			Assert.AreEqual(16, (int)Util.GetBytes("\x10")[0]);
+			Assert.AreEqual(127, (int)Util.GetBytes("\x7F")[0]);
+			Assert.AreEqual(100, (int)Util.GetBytes("\x64")[0]);
 		}
 	}
 }

@@ -6,32 +6,31 @@ using System.Text;
 namespace rencodesharp
 {
 	public class Util
-	{
-		/// <summary>
-		/// Join the List of objects by converting each item to a string.
-		/// </summary>
-		public static string Join(List<object> r)
-		{
-            return string.Concat(r);
-		}
+    {
+        public static readonly Encoding ExtendedAsciiEncoding = Encoding.GetEncoding("iso-8859-1");
 
-		/// <summary>
-		/// Converts string to byte array.
-		/// </summary>
-		public static byte[] StringBytes(string s)
-		{
-            var arr = new byte[s.Length];
-            for (var i = 0; i < s.Length; i++)
-            {
-                arr[i] = (byte)s[i];
-            }
-            return arr;
-		}
+        /// <summary>
+        /// Converts string to byte array.
+        /// </summary>
+        public static byte[] GetBytes(string s)
+        {
+            return ExtendedAsciiEncoding.GetBytes(s);
+        }
 
-		/// <summary>
-		/// Pads the front of a string with NUL bytes.
-		/// </summary>
-		public static string StringPad(string x, int n)
+        public static string GetString(byte[] bytes)
+        {
+            return ExtendedAsciiEncoding.GetString(bytes);
+        }
+
+        public static string GetString(byte[] bytes, int index, int count)
+        {
+            return ExtendedAsciiEncoding.GetString(bytes, index, count);
+        }
+
+        /// <summary>
+        /// Pads the front of a string with NUL bytes.
+        /// </summary>
+        public static string StringPad(string x, int n)
 		{
 		    return x.PadLeft(n, '\x00');
         }
