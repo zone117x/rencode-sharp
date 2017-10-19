@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using MiscUtil.Conversion;
+using System.IO;
 
 namespace rencodesharp
 {
@@ -9,30 +10,45 @@ namespace rencodesharp
 		/// <summary>
 		/// Pack the object 'x' into (network order byte format).
 		/// </summary>
-		public static string Pack(object x, int n)
+		public static byte[] Pack(object x, int n)
 		{
-			byte[] bytes = EndianBitConverter.Big.GetBytes(x);
+            byte[] bytes = EndianBitConverter.Big.GetBytes(x);
 
-			string output = string.Concat(bytes.Select(Convert.ToChar).Cast<object>().ToArray());
+            if (n != 0 && bytes.Length != n)
+            {
+                var slice = new byte[n];
+                Buffer.BlockCopy(bytes, bytes.Length - n, slice, 0, n);
+                bytes = slice;
+            }
 
-		    return output.Substring(output.Length - n, n);
+            return bytes;
 		}
 
-		/// <summary>
-		/// Unpack the string 'x' (network order byte format) into object.
-		/// </summary>
-		public static object Unpack(string x, int n)
+        public static byte[] Pack(short x) => EndianBitConverter.Big.GetBytes(x);
+        public static byte[] Pack(int x) => EndianBitConverter.Big.GetBytes(x);
+        public static byte[] Pack(long x) => EndianBitConverter.Big.GetBytes(x);
+        public static byte[] Pack(float x) => EndianBitConverter.Big.GetBytes(x);
+        public static byte[] Pack(double x) => EndianBitConverter.Big.GetBytes(x);
+        public static byte[] Pack(decimal x) => EndianBitConverter.Big.GetBytes(x);
+
+        /// <summary>
+        /// Unpack the string 'x' (network order byte format) into object.
+        /// </summary>
+        public static object Unpack(byte[] x, int n)
 		{
-			x = Util.StringPad(x, n);
+            if (n != 0 && x.Length != n)
+            {
+                var padded = new byte[x.Length + n];
+                Buffer.BlockCopy(x, 0, padded, n, x.Length);
+                x = padded;
+            }
 
-		    byte[] bytes = x.Select(Convert.ToByte).ToArray();
-
-		    switch (bytes.Length)
+		    switch (x.Length)
 		    {
-                case 1: return ToByte(bytes, 0);
-                case 2: return ToInt16(bytes, 0);
-                case 4: return ToInt32(bytes, 0);
-                case 8: return ToInt64(bytes, 0);
+                case 1: return ToByte(x, 0);
+                case 2: return ToInt16(x, 0);
+                case 4: return ToInt32(x, 0);
+                case 8: return ToInt64(x, 0);
             }
 
 			return null;
@@ -43,9 +59,7 @@ namespace rencodesharp
 		/// </summary>
 		public static sbyte ToByte(byte[] value, int startIndex)
         {
-            if (value.Length != 1)
-                throw new ArgumentException("\"value\" doesn't have 1 byte.");
-		    return (sbyte)value[0];
+		    return (sbyte)value[startIndex];
         }
 
 		/// <summary>
@@ -53,9 +67,6 @@ namespace rencodesharp
 		/// </summary>
 		public static short ToInt16(byte[] value, int startIndex)
 		{
-		    if (value.Length != 2)
-		        throw new ArgumentException("\"value\" doesn't have 2 bytes.");
-
 		    return EndianBitConverter.Big.ToInt16(value, startIndex);
 		}
 
@@ -64,9 +75,6 @@ namespace rencodesharp
 		/// </summary>
 		public static int ToInt32(byte[] value, int startIndex)
 	    {
-	        if (value.Length != 4)
-	            throw new ArgumentException("\"value\" doesn't have 4 bytes.");
-
             return EndianBitConverter.Big.ToInt32(value, startIndex);
 	    }
 
@@ -75,9 +83,6 @@ namespace rencodesharp
 		/// </summary>
 		public static long ToInt64(byte[] value, int startIndex)
 	    {
-	        if (value.Length != 8)
-	            throw new ArgumentException("\"value\" doesn't have 8 bytes.");
-
             return EndianBitConverter.Big.ToInt64(value, startIndex);
 	    }
 
@@ -86,9 +91,6 @@ namespace rencodesharp
 		/// </summary>
 		public static float ToFloat(byte[] value, int startIndex)
 	    {
-	        if (value.Length != 4)
-	            throw new ArgumentException("\"value\" doesn't have 4 bytes.");
-
             return EndianBitConverter.Big.ToSingle(value, startIndex);
 	    }
 
@@ -97,9 +99,6 @@ namespace rencodesharp
 		/// </summary>
 		public static double ToDouble(byte[] value, int startIndex)
 	    {
-	        if (value.Length != 8)
-	            throw new ArgumentException("\"value\" doesn't have 8 bytes.");
-
 	        return EndianBitConverter.Big.ToDouble(value, startIndex);
 	    }
 	}

@@ -38,12 +38,12 @@ namespace rencodesharp_tests
 		[TestMethod]
 		public void Int4()
 		{
-			string se = BStruct.Pack(1009025546, 4);
+			var se = BStruct.Pack(1009025546);
 
-			Assert.AreEqual(60,		(int)se[0]);
-			Assert.AreEqual(36,		(int)se[1]);
-			Assert.AreEqual(130,	(int)se[2]);
-			Assert.AreEqual(10,		(int)se[3]);
+			Assert.AreEqual(60, se[0]);
+			Assert.AreEqual(36,	se[1]);
+			Assert.AreEqual(130, se[2]);
+			Assert.AreEqual(10, se[3]);
 
 			int a;
 

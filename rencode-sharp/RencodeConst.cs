@@ -6,19 +6,19 @@ namespace rencodesharp
 	{
 		// The bencode 'typecodes' such as i, d, etc have been extended and
 		// relocated on the base-256 character set.
-		public const char CHR_LIST		= (char)59;
-		public const char CHR_DICT		= (char)60;
-		public const char CHR_INT		= (char)61;
-		public const char CHR_INT1		= (char)62;
-		public const char CHR_INT2		= (char)63;
-		public const char CHR_INT4		= (char)64;
-		public const char CHR_INT8		= (char)65;
-		public const char CHR_FLOAT32	= (char)66;
-		public const char CHR_FLOAT64	= (char)44;
-		public const char CHR_TRUE		= (char)67;
-		public const char CHR_FALSE		= (char)68;
-		public const char CHR_NONE		= (char)69;
-		public const char CHR_TERM		= (char)127;
+		public const byte CHR_LIST		= 59;
+		public const byte CHR_DICT		= 60;
+		public const byte CHR_INT		= 61;
+		public const byte CHR_INT1		= 62;
+		public const byte CHR_INT2		= 63;
+		public const byte CHR_INT4		= 64;
+		public const byte CHR_INT8		= 65;
+		public const byte CHR_FLOAT32	= 66;
+		public const byte CHR_FLOAT64	= 44;
+		public const byte CHR_TRUE		= 67;
+		public const byte CHR_FALSE		= 68;
+		public const byte CHR_NONE		= 69;
+		public const byte CHR_TERM		= 127;
 
 		// Maximum length of integer when written as base 10 string.
 		public const int MAX_INT_LENGTH = 64;

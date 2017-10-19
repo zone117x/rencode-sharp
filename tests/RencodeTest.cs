@@ -14,8 +14,8 @@ namespace rencodesharp_tests
 		public void String()
 		{
 			// ENCODE STRING
-			Assert.AreEqual("\x85Hello", Rencode.Encode("Hello"));
-			Assert.AreEqual("78:abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", Rencode.Encode("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"));
+			Assert.AreEqual("\x85Hello", Rencode.EncodeToString("Hello"));
+			Assert.AreEqual("78:abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", Rencode.EncodeToString("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"));
 
 			// DECODE STRING
 			Assert.AreEqual("Hello", Rencode.Decode("\x85Hello"));
@@ -42,43 +42,43 @@ namespace rencodesharp_tests
 		public void Integer()
 		{
 			// ENCODE INT1
-			Assert.AreEqual(RencodeConst.CHR_INT1 + "\x78", Rencode.Encode(120));
-			Assert.AreEqual(RencodeConst.CHR_INT1 + "\x88", Rencode.Encode(-120));
+			Assert.AreEqual((char)RencodeConst.CHR_INT1 + "\x78", Rencode.EncodeToString(120));
+			Assert.AreEqual((char)RencodeConst.CHR_INT1 + "\x88", Rencode.EncodeToString(-120));
 
 			// ENCODE INT2
-			Assert.AreEqual(RencodeConst.CHR_INT2 + "\x06\x04", Rencode.Encode(1540));
-			Assert.AreEqual(RencodeConst.CHR_INT2 + "\xF9\xFC", Rencode.Encode(-1540));
+			Assert.AreEqual((char)RencodeConst.CHR_INT2 + "\x06\x04", Rencode.EncodeToString(1540));
+			Assert.AreEqual((char)RencodeConst.CHR_INT2 + "\xF9\xFC", Rencode.EncodeToString(-1540));
 
 			// ENCODE INT4
-			Assert.AreEqual(RencodeConst.CHR_INT4 + "\x7F\xff\xff\xd0", Rencode.Encode(2147483600));
-			Assert.AreEqual(RencodeConst.CHR_INT4 + "\x80\x00\x00\x30", Rencode.Encode(-2147483600));
+			Assert.AreEqual((char)RencodeConst.CHR_INT4 + "\x7F\xff\xff\xd0", Rencode.EncodeToString(2147483600));
+			Assert.AreEqual((char)RencodeConst.CHR_INT4 + "\x80\x00\x00\x30", Rencode.EncodeToString(-2147483600));
 
 			// ENCODE INT8
-			Assert.AreEqual(65,  (int)Rencode.Encode(9223372036854700000L)[0]);
-			Assert.AreEqual(127, (int)Rencode.Encode(9223372036854700000L)[1]);
-			Assert.AreEqual(255, (int)Rencode.Encode(9223372036854700000L)[2]);
-			Assert.AreEqual(255, (int)Rencode.Encode(9223372036854700000L)[3]);
-			Assert.AreEqual(RencodeConst.CHR_INT8 + "\x7F\xFF\xFF\xFF\xFF\xFE\xD7\xE0", Rencode.Encode(9223372036854700000L));
-			Assert.AreEqual(RencodeConst.CHR_INT8 + "\x80\x00\x00\x00\x00\x01( ", Rencode.Encode(-9223372036854700000L));
+			Assert.AreEqual(65,  Rencode.Encode(9223372036854700000L)[0]);
+			Assert.AreEqual(127, Rencode.Encode(9223372036854700000L)[1]);
+			Assert.AreEqual(255, Rencode.Encode(9223372036854700000L)[2]);
+			Assert.AreEqual(255, Rencode.Encode(9223372036854700000L)[3]);
+			Assert.AreEqual((char)RencodeConst.CHR_INT8 + "\x7F\xFF\xFF\xFF\xFF\xFE\xD7\xE0", Rencode.EncodeToString(9223372036854700000L));
+			Assert.AreEqual((char)RencodeConst.CHR_INT8 + "\x80\x00\x00\x00\x00\x01( ", Rencode.EncodeToString(-9223372036854700000L));
 
 			// DECODE INT
-			Assert.AreEqual((short)1000, Rencode.Decode(RencodeConst.CHR_INT + "1000" + RencodeConst.CHR_TERM));
+			Assert.AreEqual((short)1000, Rencode.Decode((char)RencodeConst.CHR_INT + "1000" + (char)RencodeConst.CHR_TERM));
 
 			// DECODE INT1
-			Assert.AreEqual((sbyte)120, Rencode.Decode(RencodeConst.CHR_INT1 + "\x78"));
-			Assert.AreEqual((sbyte)-120, Rencode.Decode(RencodeConst.CHR_INT1 + "\x88"));
+			Assert.AreEqual((sbyte)120, Rencode.Decode((char)RencodeConst.CHR_INT1 + "\x78"));
+			Assert.AreEqual((sbyte)-120, Rencode.Decode((char)RencodeConst.CHR_INT1 + "\x88"));
 
 			// DECODE INT2
-			Assert.AreEqual((short)1540, Rencode.Decode(RencodeConst.CHR_INT2 + "\x06\x04"));
-			Assert.AreEqual((short)-1540, Rencode.Decode(RencodeConst.CHR_INT2 + "\xF9\xFC"));
+			Assert.AreEqual((short)1540, Rencode.Decode((char)RencodeConst.CHR_INT2 + "\x06\x04"));
+			Assert.AreEqual((short)-1540, Rencode.Decode((char)RencodeConst.CHR_INT2 + "\xF9\xFC"));
 
 			// DECODE INT4
-			Assert.AreEqual(2147483600, Rencode.Decode(RencodeConst.CHR_INT4 + "\x7f\xff\xff\xd0"));
-			Assert.AreEqual(-2147483600, Rencode.Decode(RencodeConst.CHR_INT4 + "\x80\x00\x00\x30"));
+			Assert.AreEqual(2147483600, Rencode.Decode((char)RencodeConst.CHR_INT4 + "\x7f\xff\xff\xd0"));
+			Assert.AreEqual(-2147483600, Rencode.Decode((char)RencodeConst.CHR_INT4 + "\x80\x00\x00\x30"));
 
 			// DECODE INT8
-			Assert.AreEqual(9223372036854700000L, Rencode.Decode(RencodeConst.CHR_INT8 + "\x7F\xFF\xFF\xFF\xFF\xFE\xD7\xE0"));
-			Assert.AreEqual(-9223372036854700000L, Rencode.Decode(RencodeConst.CHR_INT8 + "\x80\x00\x00\x00\x00\x01( "));
+			Assert.AreEqual(9223372036854700000L, Rencode.Decode((char)RencodeConst.CHR_INT8 + "\x7F\xFF\xFF\xFF\xFF\xFE\xD7\xE0"));
+			Assert.AreEqual(-9223372036854700000L, Rencode.Decode((char)RencodeConst.CHR_INT8 + "\x80\x00\x00\x00\x00\x01( "));
 		}
 
 		[TestMethod]
@@ -96,11 +96,8 @@ namespace rencodesharp_tests
 				)
 			);
 
-            CollectionAssert.AreEqual(new object[] { -1, -2, -3 },
-                (ICollection)Rencode.Decode(
-					Rencode.Encode(new object[] { -1, -2, -3 })
-				)
-			);
+            var decodedIntList = (ICollection)Rencode.Decode(Rencode.Encode(new object[] { -1, -2, -3 }));
+            CollectionAssert.AreEqual(new object[] { -1, -2, -3 }, decodedIntList);
 
 
             var multiDimStrArr = new object[] {
@@ -134,18 +131,22 @@ namespace rencodesharp_tests
             CollectionAssert.AreEqual((ICollection)multiDimIntArr[0], multiDimIntArrRoundTrip[0]);
             CollectionAssert.AreEqual((ICollection)multiDimIntArr[1], multiDimIntArrRoundTrip[1]);
 
-
-            object[] non_fixed_list_test = new object[100];
-			Random rand = new Random();
-			for(int i = 0; i < 100; i++)
-			{
-				non_fixed_list_test[i] = rand.Next();
-			}
-			string dump = Rencode.Encode(non_fixed_list_test);
-			Assert.AreEqual(RencodeConst.CHR_LIST, (int)dump[0]);
-			Assert.AreEqual(RencodeConst.CHR_TERM, (int)dump[dump.Length - 1]);
-            CollectionAssert.AreEqual(non_fixed_list_test, (ICollection)Rencode.Decode(dump));
 		}
+
+        [TestMethod]
+        public void ListNonFixed()
+        {
+            object[] non_fixed_list_test = new object[100];
+            Random rand = new Random();
+            for (int i = 0; i < non_fixed_list_test.Length; i++)
+            {
+                non_fixed_list_test[i] = rand.Next();
+            }
+            var dump = Rencode.Encode(non_fixed_list_test);
+            Assert.AreEqual(RencodeConst.CHR_LIST, dump[0]);
+            Assert.AreEqual(RencodeConst.CHR_TERM, dump[dump.Length - 1]);
+            CollectionAssert.AreEqual(non_fixed_list_test, (ICollection)Rencode.Decode(dump));
+        }
 
 		[TestMethod]
 		public void Dict()
@@ -156,14 +157,14 @@ namespace rencodesharp_tests
 			};
 
 			// Test Encode
-			string dump = Rencode.Encode(dOne);
+			var dump = Rencode.Encode(dOne);
 			Assert.AreEqual(((char)(RencodeConst.DICT_FIXED_START + 2)).ToString() +
 			                ((char)(RencodeConst.STR_FIXED_START + 5)).ToString() +
 			                "Hello" +
 			                ((char)12) + 
 			                ((char)(RencodeConst.STR_FIXED_START + 4)).ToString() +
 			                "Blah" +
-			                ((char)15), dump);
+			                ((char)15), Util.GetString(dump));
 
             CollectionAssert.AreEqual(dOne, (ICollection)Rencode.Decode(dump));
 
@@ -180,8 +181,8 @@ namespace rencodesharp_tests
 		[TestMethod]
 		public void Bool()
 		{
-			Assert.AreEqual(((char)RencodeConst.CHR_TRUE).ToString(), Rencode.Encode(true));
-			Assert.AreEqual(((char)RencodeConst.CHR_FALSE).ToString(), Rencode.Encode(false));
+			Assert.AreEqual(RencodeConst.CHR_TRUE, Rencode.Encode(true).Single());
+			Assert.AreEqual(RencodeConst.CHR_FALSE, Rencode.Encode(false).Single());
 
 			Assert.AreEqual(true, Rencode.Decode(Rencode.Encode(true)));
 			Assert.AreEqual(false, Rencode.Decode(Rencode.Encode(false)));
@@ -190,7 +191,7 @@ namespace rencodesharp_tests
 		[TestMethod]
 		public void Null()
 		{
-			Assert.AreEqual(((char)RencodeConst.CHR_NONE).ToString(), Rencode.Encode(null));
+			Assert.AreEqual(((char)RencodeConst.CHR_NONE).ToString(), Rencode.EncodeToString(null));
 
 			Assert.AreEqual(null, Rencode.Decode(Rencode.Encode(null)));
 		}

@@ -1,204 +1,223 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace rencodesharp
 {
-	public class Rencode
-	{
-		private delegate void EncodeDelegate(object x, StringBuilder dest);
-		private delegate object DecodeDelegate(string x, int startIndex, out int endIndex);
+    public static class Rencode
+    {
+        private delegate void EncodeDelegate(object x, MemoryStream dest);
+        private delegate object DecodeDelegate(MemoryStream x);
 
-		private static readonly Dictionary<Type, EncodeDelegate> EncodeFunc = new Dictionary<Type, EncodeDelegate>(){
+        static readonly Dictionary<Type, EncodeDelegate> EncodeFunc = new Dictionary<Type, EncodeDelegate>()
+        {
             {typeof(string),                        EncodeString},
 
             {typeof(sbyte),                         EncodeInt},
             {typeof(short),                         EncodeInt},
-			{typeof(int),							EncodeInt},
-			{typeof(long),							EncodeInt},
-			{typeof(float),							EncodeFloat},
-			{typeof(double),						EncodeDouble},
+            {typeof(int),                           EncodeInt},
+            {typeof(long),                          EncodeInt},
+            {typeof(float),                         EncodeFloat},
+            {typeof(double),                        EncodeDouble},
 
             {typeof(IEnumerable),                   EncodeList},
-			{typeof(object[]),						EncodeList},
+            {typeof(object[]),                      EncodeList},
             {typeof(List<object>),                  EncodeList},
 
             {typeof(IDictionary),                   EncodeDictionary},
-            {typeof(Dictionary<object, object>),	EncodeDictionary},
+            {typeof(Dictionary<object, object>),    EncodeDictionary},
 
-			{typeof(bool),							EncodeBool},
-		};
+            {typeof(bool),                          EncodeBool},
+        };
 
-		private static readonly Dictionary<char, DecodeDelegate> DecodeFunc = new Dictionary<char, DecodeDelegate>(){
-			{'0', 		DecodeString},
-			{'1', 		DecodeString},
-			{'2', 		DecodeString},
-			{'3', 		DecodeString},
-			{'4', 		DecodeString},
-			{'5', 		DecodeString},
-			{'6', 		DecodeString},
-			{'7', 		DecodeString},
-			{'8', 		DecodeString},
-			{'9', 		DecodeString},
-
-			{RencodeConst.CHR_INT,	DecodeInt},
-			{RencodeConst.CHR_INT1,	DecodeInt1},
-			{RencodeConst.CHR_INT2,	DecodeInt2},
-			{RencodeConst.CHR_INT4,	DecodeInt4},
-			{RencodeConst.CHR_INT8,	DecodeInt8},
-			{RencodeConst.CHR_FLOAT32,	DecodeFloat},
-			{RencodeConst.CHR_FLOAT64,	DecodeDouble},
-
-			{RencodeConst.CHR_LIST,	DecodeList},
-			{RencodeConst.CHR_DICT,	DecodeDictionary},
-
-			{RencodeConst.CHR_TRUE,	DecodeBoolTrue},
-			{RencodeConst.CHR_FALSE,	DecodeBoolFalse},
-			{RencodeConst.CHR_NONE,	DecodeNull},
-		};
-
-
-		#region Initialization
-
-		static Rencode()
-		{
-			for(int i = 0; i < RencodeConst.STR_FIXED_COUNT; i++) {
-				DecodeFunc.Add((char)(RencodeConst.STR_FIXED_START + i), DecodeFixedString);
-			}
-
-			for(int i = 0; i < RencodeConst.LIST_FIXED_COUNT; i++) {
-				DecodeFunc.Add((char)(RencodeConst.LIST_FIXED_START + i), DecodeFixedList);
-			}
-
-			for(int i = 0; i < RencodeConst.INT_POS_FIXED_COUNT; i++) {
-				DecodeFunc.Add((char)(RencodeConst.INT_POS_FIXED_START + i), DecodeFixedPositiveInt);
-			}
-
-			for(int i = 0; i < RencodeConst.INT_NEG_FIXED_COUNT; i++) {
-				DecodeFunc.Add((char)(RencodeConst.INT_NEG_FIXED_START + i), DecodeFixedNegativeInt);
-			}
-
-			for(int i = 0; i < RencodeConst.DICT_FIXED_COUNT; i++) {
-				DecodeFunc.Add((char)(RencodeConst.DICT_FIXED_START + i), DecodeFixedDictionary);
-			}
-		}
-
-		private static object DecodeFixedString(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1 + x[startIndex] - RencodeConst.STR_FIXED_START;
-			return x.Substring(startIndex + 1, x[startIndex] - RencodeConst.STR_FIXED_START);
-		}
-
-		private static object DecodeFixedPositiveInt(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1;
-			return x[startIndex] - RencodeConst.INT_POS_FIXED_START;
-		}
-
-		private static object DecodeFixedNegativeInt(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1;
-			return -1 - (x[startIndex] - RencodeConst.INT_NEG_FIXED_START);
-		}
-
-		private static object DecodeFixedList(string x, int startIndex, out int endIndex)
-		{
-			var result = new List<object>();
-			int listCount = x[startIndex] - RencodeConst.LIST_FIXED_START;
-			startIndex = startIndex + 1;
-
-			for(int i = 0; i < listCount; i++)
-			{
-				object v = DecodeObject(x, startIndex, out startIndex);
-				result.Add(v);
-			}
-
-			endIndex = startIndex;
-			return result.ToArray();
-		}
-
-		private static object DecodeFixedDictionary(string x, int startIndex, out int endIndex)
-		{
-			var result = new Dictionary<object, object>();
-			int dictCount = x[startIndex] - RencodeConst.DICT_FIXED_START;
-			startIndex = startIndex + 1;
-
-			for(int i = 0; i < dictCount; i++)
-			{
-				object k = DecodeObject(x, startIndex, out startIndex);
-				object v = DecodeObject(x, startIndex, out startIndex);
-				result.Add(k ,v);
-			}
-
-			endIndex = startIndex;
-			return result;
-		}
-
-		#endregion
-
-		#region Core
-
-		/// <summary>
-		/// Encode object 'x' into a rencode string.
-		/// </summary>
-		public static string Encode(object x)
-		{
-			if(x != null && !EncodeFunc.ContainsKey(x.GetType())){
-				throw new Exception("No Encoder Found");
-			}
-
-			var dest = new StringBuilder();
-			EncodeObject(x, dest);
-
-            return dest.ToString();
-		}
-
-        public static byte[] EncodeAsBytes(object x)
+        static readonly Dictionary<byte, DecodeDelegate> DecodeFunc = new Dictionary<byte, DecodeDelegate>()
         {
-            var str = Encode(x);
-            return Util.GetBytes(str);
+            {(byte)'0',         DecodeString},
+            {(byte)'1',         DecodeString},
+            {(byte)'2',         DecodeString},
+            {(byte)'3',         DecodeString},
+            {(byte)'4',         DecodeString},
+            {(byte)'5',         DecodeString},
+            {(byte)'6',         DecodeString},
+            {(byte)'7',         DecodeString},
+            {(byte)'8',         DecodeString},
+            {(byte)'9',         DecodeString},
+
+            {RencodeConst.CHR_INT,      DecodeInt},
+            {RencodeConst.CHR_INT1,     DecodeInt1},
+            {RencodeConst.CHR_INT2,     DecodeInt2},
+            {RencodeConst.CHR_INT4,     DecodeInt4},
+            {RencodeConst.CHR_INT8,     DecodeInt8},
+            {RencodeConst.CHR_FLOAT32,  DecodeFloat},
+            {RencodeConst.CHR_FLOAT64,  DecodeDouble},
+
+            {RencodeConst.CHR_LIST,     DecodeList},
+            {RencodeConst.CHR_DICT,     DecodeDictionary},
+
+            {RencodeConst.CHR_TRUE,     DecodeBoolTrue},
+            {RencodeConst.CHR_FALSE,    DecodeBoolFalse},
+            {RencodeConst.CHR_NONE,     DecodeNull},
+        };
+
+
+        #region Initialization
+
+        static Rencode()
+        {
+            for (int i = 0; i < RencodeConst.STR_FIXED_COUNT; i++)
+            {
+                DecodeFunc.Add((byte)(RencodeConst.STR_FIXED_START + i), DecodeFixedString);
+            }
+
+            for (int i = 0; i < RencodeConst.LIST_FIXED_COUNT; i++)
+            {
+                DecodeFunc.Add((byte)(RencodeConst.LIST_FIXED_START + i), DecodeFixedList);
+            }
+
+            for (int i = 0; i < RencodeConst.INT_POS_FIXED_COUNT; i++)
+            {
+                DecodeFunc.Add((byte)(RencodeConst.INT_POS_FIXED_START + i), DecodeFixedPositiveInt);
+            }
+
+            for (int i = 0; i < RencodeConst.INT_NEG_FIXED_COUNT; i++)
+            {
+                DecodeFunc.Add((byte)(RencodeConst.INT_NEG_FIXED_START + i), DecodeFixedNegativeInt);
+            }
+
+            for (int i = 0; i < RencodeConst.DICT_FIXED_COUNT; i++)
+            {
+                DecodeFunc.Add((byte)(RencodeConst.DICT_FIXED_START + i), DecodeFixedDictionary);
+            }
         }
 
-		/// <summary>
-		/// Decode rencode string 'x' into object.
-		/// </summary>
-		public static object Decode(string x)
-		{
-			if(!DecodeFunc.ContainsKey(x[0])){
-				throw new Exception("No Decoder Found");
-			}
+        static object DecodeFixedString(MemoryStream x)
+        {
+            x.Position--;
+            return x.ReadString(x.ReadByte() - RencodeConst.STR_FIXED_START);
+        }
 
-			int endIndex;
-			return DecodeObject(x, 0, out endIndex);
-		}
+        static object DecodeFixedPositiveInt(MemoryStream x)
+        {
+            x.Position--;
+            return x.ReadByte() - RencodeConst.INT_POS_FIXED_START;
+        }
 
-		/// <summary>
-		/// Decode rencode bytes 'x' into object.
-		/// </summary>
-		public static object Decode(byte[] x)
-		{
-			return Decode(Util.GetString(x));
-		}
+        static object DecodeFixedNegativeInt(MemoryStream x)
+        {
+            x.Position--;
+            var p1 = x.ReadByte();
+            var p2 = RencodeConst.INT_NEG_FIXED_START;
+            var r = -1 - (p1 - p2);
+            return r;
+        }
+
+        static object DecodeFixedList(MemoryStream x)
+        {
+            x.Position--;
+            var result = new List<object>();
+            int listCount = x.ReadByte() - RencodeConst.LIST_FIXED_START;
+
+            for (int i = 0; i < listCount; i++)
+            {
+                object v = DecodeObject(x);
+                result.Add(v);
+            }
+
+            return result.ToArray();
+        }
+
+        static object DecodeFixedDictionary(MemoryStream x)
+        {
+            x.Position--;
+            var result = new Dictionary<object, object>();
+            int dictCount = x.ReadByte() - RencodeConst.DICT_FIXED_START;
+
+            for (int i = 0; i < dictCount; i++)
+            {
+                object k = DecodeObject(x);
+                object v = DecodeObject(x);
+                result.Add(k, v);
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region Core
+
+        /// <summary>
+        /// Encode object 'x' into a rencode byte array.
+        /// </summary>
+        public static byte[] Encode(object x)
+        {
+            if (x != null && !EncodeFunc.ContainsKey(x.GetType()))
+            {
+                throw new Exception("No Encoder Found");
+            }
+
+            var ms = new MemoryStream();
+            EncodeObject(x, ms);
+
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// Encode object 'x' into a rencode string.
+        /// </summary>
+        public static string EncodeToString(object x)
+        {
+            var bytes = Encode(x);
+            var str = Util.GetString(bytes);
+            return str;
+        }
+
+        /// <summary>
+        /// Decode rencode string 'x' into object.
+        /// </summary>
+        public static object Decode(string x)
+        {
+            var bytes = Util.GetBytes(x);
+            return Decode(bytes);
+        }
 
         /// <summary>
         /// Decode rencode bytes 'x' into object.
         /// </summary>
-        public static object Decode(byte[] x, int index, int count)
+        public static object Decode(byte[] x)
         {
-            return Decode(Util.GetString(x, index, count));
+            return Decode(x, 0);
         }
 
-		#endregion
+        /// <summary>
+        /// Decode rencode bytes 'x' into object.
+        /// </summary>
+        public static object Decode(byte[] x, int startIndex)
+        {
+            if (!DecodeFunc.ContainsKey(x[0]))
+            {
+                throw new Exception("No Decoder Found");
+            }
 
-		#region Encode
+            var memStream = new MemoryStream(x, startIndex, x.Length - startIndex, true, true);
+            return DecodeObject(memStream);
+        }
 
-		private static void EncodeObject(object x, StringBuilder dest)
-		{
+        #endregion
+
+        #region Encode
+
+        static void EncodeObject(object x, MemoryStream dest)
+        {
             if (x == null)
+            {
                 EncodeNull(null, dest);
+            }
             else
             {
                 if (EncodeFunc.TryGetValue(x.GetType(), out var func))
@@ -217,171 +236,208 @@ namespace rencodesharp
                 {
                     throw new Exception("Cannot encoded unsupported type: " + x.GetType());
                 }
-                
+
             }
-		}
+        }
 
-		private static void EncodeString(object x, StringBuilder dest)
-		{
-			var xs = (string)x;
+        static void EncodeString(object x, MemoryStream dest)
+        {
+            var xs = (string)x;
 
-			if (xs.Length < RencodeConst.STR_FIXED_COUNT) {
-				dest.Append((char)(RencodeConst.STR_FIXED_START + xs.Length));
-				dest.Append(xs);
-			} else {
-				dest.Append(xs.Length.ToString());
-				dest.Append(':');
-				dest.Append(xs);
-			}
-		}
+            if (xs.Length < RencodeConst.STR_FIXED_COUNT)
+            {
+                dest.Write((byte)(RencodeConst.STR_FIXED_START + xs.Length));
+                dest.Write(xs);
+            }
+            else
+            {
+                dest.Write(xs.Length.ToString());
+                dest.Write(':');
+                dest.Write(xs);
+            }
+        }
 
-		private static void EncodeInt(object x, StringBuilder dest)
-		{
-			// Check to determine if long type is able
-			// to be packed inside an Int32 or is actually
-			// an Int64 value.
-			bool isLong = x is long && (((long)x) > int.MaxValue || ((long)x) < int.MinValue);
+        static void EncodeInt(object x, MemoryStream dest)
+        {
+            // Check to determine if long type is able
+            // to be packed inside an Int32 or is actually
+            // an Int64 value.
+            bool isLong = x is long xl && (xl > int.MaxValue || xl < int.MinValue);
 
-			if(!isLong && 0 <= (int)x && (int)x < RencodeConst.INT_POS_FIXED_COUNT) {
-				dest.Append((char)(RencodeConst.INT_POS_FIXED_START+(int)x));
-			} else if(!isLong && -RencodeConst.INT_NEG_FIXED_COUNT <= (int)x && (int)x < 0) {
-				dest.Append((char)(RencodeConst.INT_NEG_FIXED_START-1-(int)x));
-			} else if(!isLong && -128 <= (int)x && (int)x < 128) {
-				dest.Append(RencodeConst.CHR_INT1);
-				dest.Append(BStruct.Pack(x, 1));
-			} else if(!isLong && -32768 <= (int)x && (int)x < 32768) {
-				dest.Append(RencodeConst.CHR_INT2);
-				dest.Append(BStruct.Pack(x, 2));
-			} else if(-2147483648L <= Convert.ToInt64(x) && Convert.ToInt64(x) < 2147483648L) {
-				dest.Append(RencodeConst.CHR_INT4);
-				dest.Append(BStruct.Pack(x, 4));
-			} else if(-9223372036854775808L < Convert.ToInt64(x) && Convert.ToInt64(x) < 9223372036854775807L) {
-				dest.Append(RencodeConst.CHR_INT8);
-				dest.Append(BStruct.Pack(x, 8));
-			} else {
-				string s = (string)x;
-				if(s.Length >= RencodeConst.MAX_INT_LENGTH)
-					throw new ArgumentOutOfRangeException();
-				dest.Append(RencodeConst.CHR_INT);
-				dest.Append(s);
-				dest.Append(RencodeConst.CHR_TERM);
-			}
-		}
+            if (!isLong && 0 <= (int)x && (int)x < RencodeConst.INT_POS_FIXED_COUNT)
+            {
+                dest.Write((byte)(RencodeConst.INT_POS_FIXED_START + (int)x));
+            }
+            else if (!isLong && -RencodeConst.INT_NEG_FIXED_COUNT <= (int)x && (int)x < 0)
+            {
+                dest.Write((byte)(RencodeConst.INT_NEG_FIXED_START - 1 - (int)x));
+            }
+            else if (!isLong && sbyte.MinValue <= (int)x && (int)x <= sbyte.MaxValue)
+            {
+                dest.Write(RencodeConst.CHR_INT1);
+                dest.Write(Convert.ToSByte(x));
+            }
+            else if (!isLong && short.MinValue <= (int)x && (int)x <= short.MaxValue)
+            {
+                dest.Write(RencodeConst.CHR_INT2);
+                dest.Write(Convert.ToInt16(x));
+            }
+            else if (int.MinValue <= Convert.ToInt64(x) && Convert.ToInt64(x) <= int.MaxValue)
+            {
+                dest.Write(RencodeConst.CHR_INT4);
+                dest.Write(Convert.ToInt32(x));
+            }
+            else if (long.MinValue < Convert.ToInt64(x) && Convert.ToInt64(x) < long.MaxValue)
+            {
+                dest.Write(RencodeConst.CHR_INT8);
+                dest.Write(Convert.ToInt64(x));
+            }
+            else
+            {
+                string s = (string)x;
+                if (s.Length >= RencodeConst.MAX_INT_LENGTH)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+                dest.Write(RencodeConst.CHR_INT);
+                dest.Write(s);
+                dest.Write(RencodeConst.CHR_TERM);
+            }
+        }
 
-		private static void EncodeFloat(object x, StringBuilder dest)
-		{
-			dest.Append(RencodeConst.CHR_FLOAT32);
-			dest.Append(BStruct.Pack(x, 4));
-		}
+        static void EncodeFloat(object x, MemoryStream dest)
+        {
+            dest.Write(RencodeConst.CHR_FLOAT32);
+            dest.Write((float)x);
+        }
 
-		private static void EncodeDouble(object x, StringBuilder dest)
-		{
-			dest.Append(RencodeConst.CHR_FLOAT64);
-			dest.Append(BStruct.Pack(x, 8));
-		}
+        static void EncodeDouble(object x, MemoryStream dest)
+        {
+            dest.Write(RencodeConst.CHR_FLOAT64);
+            dest.Write((double)x);
+        }
 
-		private static void EncodeList(object x, StringBuilder dest)
-		{
-		    var listItems = x as IEnumerable;
-		    if(listItems == null)
+        static void EncodeList(object x, MemoryStream dest)
+        {
+            var listItems = x as IEnumerable;
+            if (listItems == null)
+            {
                 throw new Exception();
+            }
 
             object[] xl = listItems.Cast<object>().ToArray();
 
-			if(xl.Length < RencodeConst.LIST_FIXED_COUNT) {
-				dest.Append((char)(RencodeConst.LIST_FIXED_START + xl.Length));
-				foreach(object e in xl)
-					EncodeObject(e, dest);
-			} else {
-				dest.Append(RencodeConst.CHR_LIST);
-				foreach(object e in xl)
-					EncodeObject(e, dest);
-				dest.Append(RencodeConst.CHR_TERM);
-			}
-		}
+            if (xl.Length < RencodeConst.LIST_FIXED_COUNT)
+            {
+                dest.Write((byte)(RencodeConst.LIST_FIXED_START + xl.Length));
+                foreach (object e in xl)
+                {
+                    EncodeObject(e, dest);
+                }
+            }
+            else
+            {
+                dest.Write(RencodeConst.CHR_LIST);
+                foreach (object e in xl)
+                {
+                    EncodeObject(e, dest);
+                }
+                dest.Write(RencodeConst.CHR_TERM);
+            }
+        }
 
-		private static void EncodeDictionary(object x, StringBuilder dest)
-		{
+        static void EncodeDictionary(object x, MemoryStream dest)
+        {
             var xd = x as IDictionary;
             if (xd == null)
             {
                 throw new Exception();
             }
 
-			if(xd.Count < RencodeConst.DICT_FIXED_COUNT)
-			{
-				dest.Append((char)(RencodeConst.DICT_FIXED_START + xd.Count));
-				foreach(DictionaryEntry kv in xd)
-				{
-					EncodeObject(kv.Key, dest);
-					EncodeObject(kv.Value, dest);
-				}
-			} else {
-				dest.Append(RencodeConst.CHR_DICT);
-				foreach(DictionaryEntry kv in xd)
-				{
-					EncodeObject(kv.Key, dest);
-					EncodeObject(kv.Value, dest);
-				}
-				dest.Append(RencodeConst.CHR_TERM);
-			}
-		}
+            if (xd.Count < RencodeConst.DICT_FIXED_COUNT)
+            {
+                dest.Write((byte)(RencodeConst.DICT_FIXED_START + xd.Count));
+                foreach (DictionaryEntry kv in xd)
+                {
+                    EncodeObject(kv.Key, dest);
+                    EncodeObject(kv.Value, dest);
+                }
+            }
+            else
+            {
+                dest.Write(RencodeConst.CHR_DICT);
+                foreach (DictionaryEntry kv in xd)
+                {
+                    EncodeObject(kv.Key, dest);
+                    EncodeObject(kv.Value, dest);
+                }
+                dest.Write(RencodeConst.CHR_TERM);
+            }
+        }
 
-		private static void EncodeBool(object x, StringBuilder dest)
-		{
-			if(x.GetType() != typeof(bool)) throw new Exception();
-			var xb = (bool)x;
+        static void EncodeBool(object x, MemoryStream dest)
+        {
+            if (x.GetType() != typeof(bool))
+            {
+                throw new Exception();
+            }
+            var xb = (bool)x;
 
-		    dest.Append(xb ? RencodeConst.CHR_TRUE : RencodeConst.CHR_FALSE);
-		}
+            dest.Write(xb ? RencodeConst.CHR_TRUE : RencodeConst.CHR_FALSE);
+        }
 
-		private static void EncodeNull(object x, StringBuilder dest)
-		{
-			if(x != null) throw new Exception();
+        static void EncodeNull(object x, MemoryStream dest)
+        {
+            if (x != null)
+            {
+                throw new Exception();
+            }
 
-			dest.Append(RencodeConst.CHR_NONE);
-		}
+            dest.Write(RencodeConst.CHR_NONE);
+        }
 
-		#endregion
+        #endregion
 
-		#region Decode
+        #region Decode
 
-		private static object DecodeObject(string x, int startIndex, out int endIndex)
-		{
-			return DecodeFunc[x[startIndex]](x, startIndex, out endIndex);
-		}
+        static object DecodeObject(MemoryStream x)
+        {
+            var type = (byte)x.ReadByte();
+            return DecodeFunc[type](x);
+        }
 
-		private static string DecodeString(string x, int startIndex, out int endIndex)
-		{
-			int indexOfColon = x.IndexOf(':', startIndex);
-			int stringLength = Convert.ToInt32(x.Substring(startIndex, indexOfColon - startIndex)); // TODO: doesn't support long length
+        static string DecodeString(MemoryStream x)
+        {
+            x.Position--;
 
-			indexOfColon += 1;
-			string s = x.Substring(indexOfColon, stringLength);
+            const byte colon = (byte)':';
+            var indexOfColon = x.IndexOf(colon);
 
-			endIndex = indexOfColon+stringLength;
-			return s;
-		}
+            // TODO: doesn't support long length
+            var stringLength = Convert.ToInt32(x.ReadString(indexOfColon - (int)x.Position));
 
-		private static object DecodeInt(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			int newf = x.IndexOf(RencodeConst.CHR_TERM, startIndex);
-			if(newf - startIndex >= RencodeConst.MAX_INT_LENGTH) {
-				throw new Exception("Overflow");
-			}
-			long n = Convert.ToInt64(x.Substring(startIndex, newf - startIndex));
+            x.Position++;
+            return x.ReadString(stringLength);
+        }
 
-			if(x[startIndex] == '-'){
-				if(x[startIndex + 1] == '0') {
-					throw new Exception("Value Error");
-				}
-			}
-			else if(x[startIndex] == '0' && newf != startIndex+1) {
-				throw new Exception("Value Error");
-			}
+        static object DecodeInt(MemoryStream x)
+        {
+            var buff = x.GetBuffer();
+            int chrTermIndex = (int)x.Position;
 
-			endIndex = newf+1;
+            for (; chrTermIndex < x.Length; chrTermIndex++)
+            {
+                if (buff[chrTermIndex] == RencodeConst.CHR_TERM)
+                {
+                    break;
+                }
+                if (chrTermIndex - x.Position > RencodeConst.MAX_INT_LENGTH)
+                {
+                    throw new Exception("Overflow");
+                }
+            }
+
+            var n = Convert.ToInt32(x.ReadString(chrTermIndex - (int)x.Position));
 
             object result = n;
 
@@ -398,104 +454,63 @@ namespace rencodesharp
                 result = (int)n;
             }
 
-			return result;
-		}
+            return result;
+        }
 
-		private static object DecodeInt1(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 1;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeInt1(MemoryStream x) => x.ReadSByte();
 
-			return BStruct.ToByte(Util.GetBytes(x.Substring(startIndex, 1)), 0);
-		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeInt2(MemoryStream x) => x.ReadInt16();
 
-		private static object DecodeInt2(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 2;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeInt4(MemoryStream x) => x.ReadInt32();
 
-			return BStruct.ToInt16(Util.GetBytes(x.Substring(startIndex, 2)), 0);
-		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeInt8(MemoryStream x) => x.ReadInt64();
 
-		private static object DecodeInt4(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 4;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeFloat(MemoryStream x) => x.ReadSingle();
 
-            return BStruct.ToInt32(Util.GetBytes(x.Substring(startIndex, 4)), 0);
-		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeDouble(MemoryStream x) => x.ReadDouble();
 
-		private static object DecodeInt8(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 8;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeList(MemoryStream x)
+        {
+            var result = new List<object>();
+            while (x.ReadByte() != RencodeConst.CHR_TERM)
+            {
+                x.Position--;
+                object v = DecodeObject(x);
+                result.Add(v);
+            }
+            return result.ToArray();
+        }
 
-			return BStruct.ToInt64(Util.GetBytes(x.Substring(startIndex, 8)), 0);
-		}
+        static object DecodeDictionary(MemoryStream x)
+        {
+            var result = new Dictionary<object, object>();
+            while (x.ReadByte() != RencodeConst.CHR_TERM)
+            {
+                x.Position--;
+                object k = DecodeObject(x);
+                object v = DecodeObject(x);
+                result.Add(k, v);
+            }
+            return result;
+        }
 
-		private static object DecodeFloat(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 4;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeBoolTrue(MemoryStream x) => true;
 
-			return BStruct.ToFloat(Util.GetBytes(x.Substring(startIndex, 4)), 0);
-		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeBoolFalse(MemoryStream x) => false;
 
-		private static object DecodeDouble(string x, int startIndex, out int endIndex)
-		{
-			startIndex += 1;
-			endIndex = startIndex + 8;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static object DecodeNull(MemoryStream x) => null;
 
-			return BStruct.ToDouble(Util.GetBytes(x.Substring(startIndex, 8)), 0);
-		}
-
-		private static object DecodeList(string x, int startIndex, out int endIndex)
-		{
-			var result = new List<object>();
-			startIndex = startIndex + 1;
-			while(x[startIndex] != RencodeConst.CHR_TERM)
-			{
-				object v = DecodeObject(x, startIndex, out startIndex);
-				result.Add(v);
-			}
-			endIndex = startIndex + 1;
-			return result.ToArray();
-		}
-
-		private static object DecodeDictionary(string x, int startIndex, out int endIndex)
-		{
-			var result = new Dictionary<object, object>();
-			startIndex = startIndex + 1;
-			while(x[startIndex] != RencodeConst.CHR_TERM)
-			{
-				object k = DecodeObject(x, startIndex, out startIndex);
-				object v = DecodeObject(x, startIndex, out startIndex);
-				result.Add(k, v);
-			}
-
-			endIndex = startIndex + 1;
-			return result;
-		}
-
-		private static object DecodeBoolTrue(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1;
-			return true;
-		}
-
-		private static object DecodeBoolFalse(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1;
-			return false;
-		}
-
-		private static object DecodeNull(string x, int startIndex, out int endIndex)
-		{
-			endIndex = startIndex + 1;
-			return null;
-		}
-
-		#endregion
-	}
+        #endregion
+    }
 }
 
