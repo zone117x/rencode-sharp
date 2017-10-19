@@ -22,7 +22,7 @@ namespace rencodesharp
 			{typeof(float),							EncodeFloat},
 			{typeof(double),						EncodeDouble},
 
-            {typeof(IEnumerable<object>),           EncodeList},
+            {typeof(IEnumerable),                   EncodeList},
 			{typeof(object[]),						EncodeList},
             {typeof(List<object>),                  EncodeList},
 
@@ -209,15 +209,15 @@ namespace rencodesharp
                 {
                     EncodeFunc[typeof(IDictionary)](x, dest);
                 }
-                else if (x is IEnumerable<object>)
+                else if (x is IEnumerable)
                 {
-                    EncodeFunc[typeof(IEnumerable<object>)](x, dest);
+                    EncodeFunc[typeof(IEnumerable)](x, dest);
                 }
                 else
                 {
                     throw new Exception("Cannot encoded unsupported type: " + x.GetType());
                 }
-
+                
             }
 		}
 
@@ -282,11 +282,11 @@ namespace rencodesharp
 
 		private static void EncodeList(object x, StringBuilder dest)
 		{
-		    var listItems = x as IEnumerable<object>;
+		    var listItems = x as IEnumerable;
 		    if(listItems == null)
                 throw new Exception();
 
-		    object[] xl = listItems.ToArray();
+            object[] xl = listItems.Cast<object>().ToArray();
 
 			if(xl.Length < RencodeConst.LIST_FIXED_COUNT) {
 				dest.Append((char)(RencodeConst.LIST_FIXED_START + xl.Length));
