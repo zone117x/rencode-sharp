@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using rencodesharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
+using System.Text;
 
 namespace rencodesharp_tests
 {
@@ -25,6 +26,9 @@ namespace rencodesharp_tests
         [TestMethod]
         public void StringUnicode()
         {
+            var utf8 = Encoding.UTF8.GetBytes("fööbar");
+            var utf8x = Encoding.UTF8.GetBytes((string)Rencode.Decode(Rencode.Encode("fööbar")));
+
             Assert.AreEqual("fööbar", Rencode.Decode(Rencode.Encode("fööbar")));
         }
 

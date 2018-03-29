@@ -243,17 +243,18 @@ namespace rencodesharp
         static void EncodeString(object x, MemoryStream dest)
         {
             var xs = (string)x;
+            var utf8 = Encoding.UTF8.GetBytes(xs);
 
-            if (xs.Length < RencodeConst.STR_FIXED_COUNT)
+            if (utf8.Length < RencodeConst.STR_FIXED_COUNT)
             {
-                dest.Write((byte)(RencodeConst.STR_FIXED_START + xs.Length));
-                dest.Write(xs);
+                dest.Write((byte)(RencodeConst.STR_FIXED_START + utf8.Length));
+                dest.Write(utf8);
             }
             else
             {
-                dest.Write(xs.Length.ToString());
+                dest.Write(utf8.Length.ToString());
                 dest.Write(':');
-                dest.Write(xs);
+                dest.Write(utf8);
             }
         }
 
@@ -263,38 +264,39 @@ namespace rencodesharp
             // to be packed inside an Int32 or is actually
             // an Int64 value.
             bool isLong = x is long xl && (xl > int.MaxValue || xl < int.MinValue);
+            long num = x is long l ? l : Convert.ToInt64(x);
 
-            if (!isLong && 0 <= (int)x && (int)x < RencodeConst.INT_POS_FIXED_COUNT)
+            if (!isLong && 0 <= num && num < RencodeConst.INT_POS_FIXED_COUNT)
             {
-                dest.Write((byte)(RencodeConst.INT_POS_FIXED_START + (int)x));
+                dest.Write((byte)(RencodeConst.INT_POS_FIXED_START + num));
             }
-            else if (!isLong && -RencodeConst.INT_NEG_FIXED_COUNT <= (int)x && (int)x < 0)
+            else if (!isLong && -RencodeConst.INT_NEG_FIXED_COUNT <= num && num < 0)
             {
-                dest.Write((byte)(RencodeConst.INT_NEG_FIXED_START - 1 - (int)x));
+                dest.Write((byte)(RencodeConst.INT_NEG_FIXED_START - 1 - num));
             }
-            else if (!isLong && sbyte.MinValue <= (int)x && (int)x <= sbyte.MaxValue)
+            else if (!isLong && sbyte.MinValue <= num && num <= sbyte.MaxValue)
             {
                 dest.Write(RencodeConst.CHR_INT1);
-                dest.Write(Convert.ToSByte(x));
+                dest.Write(Convert.ToSByte(num));
             }
-            else if (!isLong && short.MinValue <= (int)x && (int)x <= short.MaxValue)
+            else if (!isLong && short.MinValue <= num && num <= short.MaxValue)
             {
                 dest.Write(RencodeConst.CHR_INT2);
-                dest.Write(Convert.ToInt16(x));
+                dest.Write(Convert.ToInt16(num));
             }
-            else if (int.MinValue <= Convert.ToInt64(x) && Convert.ToInt64(x) <= int.MaxValue)
+            else if (int.MinValue <= num && num <= int.MaxValue)
             {
                 dest.Write(RencodeConst.CHR_INT4);
-                dest.Write(Convert.ToInt32(x));
+                dest.Write(Convert.ToInt32(num));
             }
-            else if (long.MinValue < Convert.ToInt64(x) && Convert.ToInt64(x) < long.MaxValue)
+            else if (long.MinValue < num && num < long.MaxValue)
             {
                 dest.Write(RencodeConst.CHR_INT8);
-                dest.Write(Convert.ToInt64(x));
+                dest.Write(Convert.ToInt64(num));
             }
             else
             {
-                string s = (string)x;
+                string s = num.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 if (s.Length >= RencodeConst.MAX_INT_LENGTH)
                 {
                     throw new ArgumentOutOfRangeException();

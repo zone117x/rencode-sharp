@@ -42,7 +42,7 @@ namespace rencodesharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadString(this MemoryStream stream, int stringLength)
         {
-            var res = Util.GetString(stream.GetBuffer(), (int)stream.Position, stringLength);
+            var res = Encoding.UTF8.GetString(stream.GetBuffer(), (int)stream.Position, stringLength);
             stream.Position += stringLength;
             return res;
         }
